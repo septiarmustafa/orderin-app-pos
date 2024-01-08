@@ -1,4 +1,4 @@
-package com.enigma.orderin.controller;
+package com.enigma.orderin.exception;
 
 import com.enigma.orderin.dto.response.CommonResponse;
 import com.enigma.orderin.dto.response.ProductResponse;

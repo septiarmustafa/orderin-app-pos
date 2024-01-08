@@ -9,6 +9,7 @@ import com.enigma.orderin.service.ProductDetailService;
 import com.enigma.orderin.service.ProductService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -57,13 +58,18 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> productOptional = productRepository.findByIdProduct(id);
         if (productOptional.isPresent()) {
             Product product = productOptional.get();
-            return ProductResponse.builder()
-                    .productId(product.getId())
-                    .productName(product.getName())
-                    .build();
-        } else {
-            return null;
+            ProductDetail productDetail = product.getProductDetails().stream().findFirst().orElse(null);
+            if (productDetail != null) {
+                return ProductResponse.builder()
+                        .productId(product.getId())
+                        .productName(product.getName())
+                        .price(productDetail.getPrice())
+                        .stock(productDetail.getStock())
+                        .isActive(productDetail.getIsActive())
+                        .build();
+            }
         }
+        return null;
     }
 
     @Override
@@ -91,9 +97,19 @@ public class ProductServiceImpl implements ProductService {
         Product productUpdated = productRepository.findByIdProduct(productRequest.getProductId()).orElse(null);
         if (productUpdated == null) return null;
 
+        ProductDetail productDetail = ProductDetail.builder()
+                .id(productRequest.getProductId())
+                .price(productRequest.getPrice())
+                .stock(productRequest.getStock())
+                .isActive(true)
+                .build();
+
         return ProductResponse.builder()
                 .productId(productUpdated.getId())
                 .productName(productUpdated.getName())
+                .price(productDetail.getPrice())
+                .stock(productDetail.getStock())
+                .isActive(productDetail.getIsActive())
                 .build();
     }
 
@@ -142,35 +158,33 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Page<ProductResponse> getAllByNameOrPrice(String name, Long maxPrice, Integer page, Integer size) {
         Specification<Product> specification = (root, query, criteriaBuilder) -> {
-            Join<Product, ProductDetail> productDetailJoin = root.join("productDetail");
+            Join<Product, ProductDetail> productDetailJoin = root.join("productDetails", JoinType.LEFT);
             List<Predicate> predicates = new ArrayList<>();
             if (name != null) {
-                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%" ));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
             }
             if (maxPrice != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(productDetailJoin.get("price"), maxPrice));
             }
-
-            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
+            predicates.add(criteriaBuilder.equal(productDetailJoin.get("isActive"), true));
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Product> products = productRepository.findAll(specification,pageable);
-        List<ProductResponse> productResponses = new ArrayList<>();
-        for (Product product : products.getContent()) {
-            Optional<ProductDetail> productDetail = product.getProductDetails()
-                    .stream()
-                    .filter(ProductDetail::getIsActive).findFirst();
-            if (productDetail.isEmpty()) continue;
-            productResponses.add(
-                    ProductResponse.builder()
-                            .productId(product.getId())
-                            .productName(product.getName())
-                            .price(productDetail.get().getPrice())
-                            .stock(productDetail.get().getStock())
+        Page<Product> products = productRepository.findAll(specification, pageable);
+        List<ProductResponse> productResponses = products.getContent().stream()
+                .flatMap(product -> product.getProductDetails().stream()
+                        .filter(ProductDetail::getIsActive)
+                        .map(productDetail -> ProductResponse.builder()
+                                .productId(product.getId())
+                                .productName(product.getName())
+                                .price(productDetail.getPrice())
+                                .stock(productDetail.getStock())
+                                .isActive(productDetail.getIsActive())
+                                .build()
+                        )
+                ).collect(Collectors.toList());
 
-                    .build());
-        }
         return new PageImpl<>(productResponses, pageable, products.getTotalElements());
     }
 }
