@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderDetail(orderDetails)
                 .build();
 
-        Integer orderId = orderRepository.createNewOrder(order.getDate(), order.getCashier().getId());
+        orderRepository.createNewOrder(order.getDate(), order.getCashier().getId());
 
         Integer lastInsertOrderId = orderRepository.getLastInsertedId();
 
@@ -65,10 +66,6 @@ public class OrderServiceImpl implements OrderService {
             Integer quantity = orderDetailRequest.getQuantity();
            orderDetailRepository.createOrderDetail(lastInsertOrderId, productDetailId, quantity);
         }
-
-
-        Integer lastInsertOrderDetailId = orderDetailRepository.getLastInsertedId();
-
 
         List<OrderDetailResponse> orderDetailResponses = savedOrder.getOrderDetail()
                 .stream()
@@ -106,7 +103,71 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderResponse> getAllOrder() {
+    public OrderResponse getOrderResponseById(Integer id) {
+        Optional<Order> order = orderRepository.getOrderById(id);
+        if (order.isPresent()) {
+            Order orders = order.get();
+            OrderDetail orderDetail = orders.getOrderDetail().stream().findFirst().orElse(null);
+            CashierResponse cashierResponse = cashierService.getById(orders.getCashier().getId());
+            List<OrderDetailResponse> orderDetailResponses = orders.getOrderDetail()
+                    .stream()
+                    .map(orderDetails -> {
+                        orderDetails.setOrder(orders);
+                        ProductDetail currentProductDetail = orderDetails.getProductDetail();
+                        return OrderDetailResponse.builder()
+                                .orderDetailId(orderDetails.getId())
+                                .quantity(orderDetails.getQuantity())
+                                .product(ProductResponse.builder()
+                                        .productId(currentProductDetail.getProduct().getId())
+                                        .productName(currentProductDetail.getProduct().getName())
+                                        .stock(currentProductDetail.getStock())
+                                        .price(currentProductDetail.getPrice())
+                                        .isActive(currentProductDetail.getIsActive())
+                                        .build())
+                                .build();
+                    }).toList();
+            if (orderDetail != null) {
+                return OrderResponse.builder()
+                        .orderId(orders.getId())
+                        .transactionDate(orders.getDate())
+                        .listOrderDetail(orderDetailResponses)
+                        .cashier(cashierResponse)
+                        .build();
+            }
+        }
         return null;
+    }
+
+    @Override
+    public List<OrderResponse> getAllOrder() {
+        List<Order> orders = orderRepository.getAllOrder();
+        return  orders.stream()
+                .map(order -> {
+                    CashierResponse cashierResponse = cashierService.getById(order.getCashier().getId());
+                    List<OrderDetailResponse> orderDetailResponses = order.getOrderDetail()
+                            .stream()
+                            .map(orderDetail -> {
+                                orderDetail.setOrder(order);
+                                ProductDetail productDetail = orderDetail.getProductDetail();
+                                return OrderDetailResponse.builder()
+                                        .orderDetailId(orderDetail.getId())
+                                        .quantity(orderDetail.getQuantity())
+                                        .product(ProductResponse.builder()
+                                                .productId(productDetail.getProduct().getId())
+                                                .productName(productDetail.getProduct().getName())
+                                                .stock(productDetail.getStock())
+                                                .price(productDetail.getPrice())
+                                                .isActive(productDetail.getIsActive())
+                                                .build())
+                                        .build();
+                            }).toList();
+                    return  OrderResponse.builder()
+                            .orderId(order.getId())
+                            .cashier(cashierResponse)
+                            .listOrderDetail(orderDetailResponses)
+                            .transactionDate(order.getDate())
+                            .build();
+
+                }).collect(Collectors.toList());
     }
 }

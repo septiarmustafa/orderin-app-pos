@@ -29,7 +29,7 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         }
 
         return OrderDetailResponse.builder()
-                .orderDetailId(lastInsertId.intValue())
+                .orderDetailId(lastInsertId)
                 .product(ProductResponse.builder()
                         .productId(orderDetail.getProductDetail().getProduct().getId())
                         .price(orderDetail.getProductDetail().getPrice())

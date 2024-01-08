@@ -16,7 +16,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
 
     @Modifying()
     @Query(value = "INSERT INTO t_order (date, cashier_id) VALUES (?1, ?2)", nativeQuery = true)
-    Integer createNewOrder(LocalDate orderDate,Integer cashierId);
+    void createNewOrder(LocalDate orderDate,Integer cashierId);
 
     @Query(value = "SELECT * FROM t_order WHERE id IN (SELECT MAX(id) FROM t_order)", nativeQuery = true)
     Integer getLastInsertedId();
