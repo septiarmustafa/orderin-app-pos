@@ -15,7 +15,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 public class OrderResponse {
     private Integer orderId;
-    private LocalDate transDate;
-    private CashierResponse cashierResponse;
-    private List<OrderDetailResponse> orderDetailList;
+    private LocalDate transactionDate;
+    private CashierResponse cashier;
+    private List<OrderDetailResponse> listOrderDetail;
 }
