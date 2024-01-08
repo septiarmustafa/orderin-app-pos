@@ -56,6 +56,7 @@ public class ProductController {
     }
 
     @PutMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateProduct (@RequestBody ProductRequest productRequest){
         ProductResponse productResponse = productService.updateProduct(productRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -66,6 +67,7 @@ public class ProductController {
     }
 
     @PutMapping(value = AppPath.ID_PRODUCT)
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct (@PathVariable(name = "id_product") Integer id){
        productService.deleteProduct(id);
         return ResponseEntity.status(HttpStatus.CREATED)

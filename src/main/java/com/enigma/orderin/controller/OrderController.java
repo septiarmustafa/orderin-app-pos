@@ -25,7 +25,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@RequestBody OrderRequest orderRequest) {
+    public ResponseEntity<?> createOrder(@RequestBody OrderRequest orderRequest) {
         OrderResponse orderResponse = orderService.createNewOrder(orderRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CommonResponse.builder()
@@ -46,7 +46,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllProduct (){
+    public ResponseEntity<?> getAllOrder (){
         List<OrderResponse> orderResponse = orderService.getAllOrder();
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(CommonResponse.builder()
