@@ -1,6 +1,7 @@
 package com.enigma.orderin.repository;
 
 import com.enigma.orderin.entity.ProductDetail;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +22,14 @@ public interface ProductDetailRepository extends JpaRepository<ProductDetail, In
     @Query(value = "SELECT * FROM t_product_detail pd WHERE pd.id = ?1", nativeQuery = true)
     Optional<ProductDetail> findById(Integer id);
 
+    @Query(value = "SELECT * FROM t_product_detail pd WHERE pd.product_id = ?1", nativeQuery = true)
+    Optional<ProductDetail> findByProductId(Integer productId);
+
     @Query(value = "SELECT * FROM t_product_detail pd WHERE pd.product_id = ?1 AND pd.is_active = ?2", nativeQuery = true)
     Optional<ProductDetail> findByProduct_IdAndIsActive( Integer productId, Boolean isActive);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE t_product_detail SET price = ?2, stock = ?3 WHERE product_id = ?1", nativeQuery = true)
+    void updateProductDetail( Integer productId, Long price, Integer stock);
 }

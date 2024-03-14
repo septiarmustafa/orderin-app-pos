@@ -4,6 +4,7 @@ import com.enigma.orderin.dto.request.ProductRequest;
 import com.enigma.orderin.dto.response.ProductResponse;
 import com.enigma.orderin.entity.Product;
 import com.enigma.orderin.entity.ProductDetail;
+import com.enigma.orderin.repository.ProductDetailRepository;
 import com.enigma.orderin.repository.ProductRepository;
 import com.enigma.orderin.service.ProductDetailService;
 import com.enigma.orderin.service.ProductService;
@@ -33,6 +34,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final ProductDetailService productDetailService;
+    private final ProductDetailRepository productDetailRepository;
 
     @Override
     public ProductResponse createProduct(ProductRequest productRequest) {
@@ -90,25 +92,28 @@ public class ProductServiceImpl implements ProductService {
             throw new IllegalArgumentException("Product ID and name must not be empty or null");
         }
         Product product = productRepository.findByIdProduct(productRequest.getProductId()).orElse(null);
-        if (product == null) return null;
+        if (product == null) throw new IllegalArgumentException("Product with ID " + productRequest.getProductId() + " not found");
 
-        productRepository.updateProductName(productRequest.getProductId(), productRequest.getProductName());
+        if (StringUtils.isNotBlank(productRequest.getProductName())){
+            productRepository.updateProductName(productRequest.getProductId(), productRequest.getProductName());
+        }
+        productDetailRepository.updateProductDetail(productRequest.getProductId(),
+                productRequest.getPrice(),
+                productRequest.getStock());
+
         Product productUpdated = productRepository.findByIdProduct(productRequest.getProductId()).orElse(null);
-        if (productUpdated == null) return null;
+        ProductDetail updatedProductDetail = productDetailRepository.findByProductId(productRequest.getProductId()).orElse(null);
 
-        ProductDetail productDetail = ProductDetail.builder()
-                .id(productRequest.getProductId())
-                .price(productRequest.getPrice())
-                .stock(productRequest.getStock())
-                .isActive(true)
-                .build();
+        if (productUpdated == null || updatedProductDetail == null) {
+            throw new IllegalArgumentException("Failed to update product details");
+        }
 
         return ProductResponse.builder()
                 .productId(productUpdated.getId())
                 .productName(productUpdated.getName())
-                .price(productDetail.getPrice())
-                .stock(productDetail.getStock())
-                .isActive(productDetail.getIsActive())
+                .price(updatedProductDetail.getPrice())
+                .stock(updatedProductDetail.getStock())
+                .isActive(updatedProductDetail.getIsActive())
                 .build();
     }
 
