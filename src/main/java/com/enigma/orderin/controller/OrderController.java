@@ -56,9 +56,10 @@ public class OrderController {
     @GetMapping(value = AppPath.PAGE)
     public  ResponseEntity<?> getAllWithPagination(
             @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
-            @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
+            @RequestParam(name = "size", required = false, defaultValue = "5") Integer size,
+            @RequestParam(name = "cashierId", required = false, defaultValue = "") Integer cashierId
     ){
-        Page<OrderResponse> productResponses = orderService.getAllWithPagination(page,size);
+        Page<OrderResponse> productResponses = orderService.getAllWithPagination(page,size, cashierId);
         PagingResponse pagingResponse = PagingResponse.builder()
                 .currentPage(page)
                 .totalPage(productResponses.getTotalPages())
@@ -67,7 +68,7 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
                         .statusCode(HttpStatus.OK.value())
-                        .message("Successfully get all product")
+                        .message("Successfully get all order")
                         .data(productResponses.getContent())
                         .paging(pagingResponse)
                         .build());

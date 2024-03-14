@@ -181,9 +181,13 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Page<OrderResponse> getAllWithPagination(Integer page, Integer size) {
+    public Page<OrderResponse> getAllWithPagination(Integer page, Integer size, Integer cashierId) {
         Specification<Order> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
+            if (cashierId != null) {
+                Join<Order, Cashier> cashierJoin = root.join("cashier", JoinType.INNER);
+                predicates.add(criteriaBuilder.equal(cashierJoin.get("id"), cashierId));
+            }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
         Pageable pageable = PageRequest.of(page, size);
@@ -192,33 +196,32 @@ public class OrderServiceImpl implements OrderService {
 
         List<OrderResponse> orderResponses = orders.getContent().stream()
                 .flatMap(order -> order.getOrderDetail().stream()
-                        .map(orderDetail ->{
+                        .map(orderDetail -> {
                             CashierResponse cashierResponse = cashierService.getById(order.getCashier().getId());
-                                    List<OrderDetailResponse> orderDetailResponses = order.getOrderDetail()
-                                            .stream()
-                                            .map(orderDetails -> {
-                                                orderDetails.setOrder(order);
-                                                ProductDetail productDetail = orderDetails.getProductDetail();
-                                                return OrderDetailResponse.builder()
-                                                        .orderDetailId(orderDetails.getId())
-                                                        .quantity(orderDetails.getQuantity())
-                                                        .product(ProductResponse.builder()
-                                                                .productId(productDetail.getProduct().getId())
-                                                                .productName(productDetail.getProduct().getName())
-                                                                .stock(productDetail.getStock())
-                                                                .price(productDetail.getPrice())
-                                                                .isActive(productDetail.getIsActive())
-                                                                .build())
-                                                        .build();
-                                            }).toList();
+                            List<OrderDetailResponse> orderDetailResponses = order.getOrderDetail()
+                                    .stream()
+                                    .map(orderDetails -> {
+                                        orderDetails.setOrder(order);
+                                        ProductDetail productDetail = orderDetails.getProductDetail();
+                                        return OrderDetailResponse.builder()
+                                                .orderDetailId(orderDetails.getId())
+                                                .quantity(orderDetails.getQuantity())
+                                                .product(ProductResponse.builder()
+                                                        .productId(productDetail.getProduct().getId())
+                                                        .productName(productDetail.getProduct().getName())
+                                                        .stock(productDetail.getStock())
+                                                        .price(productDetail.getPrice())
+                                                        .isActive(productDetail.getIsActive())
+                                                        .build())
+                                                .build();
+                                    }).toList();
                             return OrderResponse.builder()
                                     .orderId(order.getId())
                                     .transactionDate(order.getDate())
                                     .cashier(cashierResponse)
                                     .listOrderDetail(orderDetailResponses)
                                     .build();
-                            })).collect(Collectors.toList());
-
+                        })).collect(Collectors.toList());
         return new PageImpl<>(orderResponses, pageable, orders.getTotalElements());
     }
 }
