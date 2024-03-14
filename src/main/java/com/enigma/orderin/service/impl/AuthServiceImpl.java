@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Cashier already exist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exist");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 

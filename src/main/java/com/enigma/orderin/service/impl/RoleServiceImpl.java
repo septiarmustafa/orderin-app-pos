@@ -17,6 +17,6 @@ public class RoleServiceImpl implements RoleService {
         if (optionalRole == null) {
             return roleRepository.save(role);
         }
-        return null;
+        return optionalRole;
     }
 }

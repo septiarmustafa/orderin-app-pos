@@ -18,25 +18,25 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    @Value("${app.sopimart.jwt.jwt-secret}")
+    @Value("${app.orderin.jwt.jwt-secret}")
     private String jwtSecret;
 
-    @Value("${app.sopimart.jwt.app-name}")
+    @Value("${app.orderin.jwt.app-name}")
     private String appName;
 
-    @Value("${app.sopimart.jwt.jwtExpirationInSecond}")
+    @Value("${app.orderin.jwt.jwtExpirationInSecond}")
     private  long jwtExpirationInSecond;
 
     public String generateToken (AppUser appUser){
         try {
             Algorithm algorithm = Algorithm.HMAC256(jwtSecret.getBytes(StandardCharsets.UTF_8));
             String token = JWT.create()
-                    .withIssuer(appName) // info untuk application nama yang kita buat
-                    .withSubject(appUser.getId()) // menentukan object yang akan dibuat biasanya dari ID
-                    .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond)) // menentukan waktu kadaluarsa token nanti, dalam sini kadaluarsanya adalah 60 detik setelah dibuat
-                    .withIssuedAt(Instant.now()) // menetapkan waktu token kapan dibuat
-                    .withClaim("role", appUser.getRole().name()) // menambahkan claim atau info nama pengguna
-                    .sign(algorithm); // ini itu seperti ttd kontrak bahwa algoritma yang kita pakai itu udah pasti HMAC256
+                    .withIssuer(appName)
+                    .withSubject(appUser.getId())
+                    .withExpiresAt(Instant.now().plusSeconds(jwtExpirationInSecond))
+                    .withIssuedAt(Instant.now())
+                    .withClaim("role", appUser.getRole().name())
+                    .sign(algorithm);
             return token;
         } catch (JWTCreationException e) {
             throw new RuntimeException();

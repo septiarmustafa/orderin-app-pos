@@ -14,10 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CashierServiceImpl implements CashierService {
 
-
-
     private final CashierRepository cashierRepository;
-
 
     @Override
     public CashierResponse createCashier(Cashier cashier) {
