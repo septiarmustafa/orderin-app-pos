@@ -22,7 +22,7 @@ public interface ProductRepository extends JpaRepository<Product, Integer>, JpaS
     @Query(value = "SELECT * FROM m_product WHERE id = ?1", nativeQuery = true)
     Optional<Product> findByIdProduct(Integer id);
 
-    @Query(value = "SELECT * FROM m_product", nativeQuery = true)
+    @Query(value = "SELECT p.* FROM m_product p INNER JOIN t_product_detail pd ON p.id = pd.product_id WHERE pd.is_active = true", nativeQuery = true)
     List<Product> findAllProducts();
 
     @Modifying(clearAutomatically = true)

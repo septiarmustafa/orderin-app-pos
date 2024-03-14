@@ -13,5 +13,5 @@ public interface AdminService {
     List<AdminResponse> getAllAdmin();
 
     AdminResponse updateAdmin (Admin admin);
-    void deleteAdmin (String id);
+    void deleteAdmin (Integer id);
 }

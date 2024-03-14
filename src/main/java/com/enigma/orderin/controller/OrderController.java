@@ -2,15 +2,13 @@ package com.enigma.orderin.controller;
 
 import com.enigma.orderin.constant.AppPath;
 import com.enigma.orderin.dto.request.OrderRequest;
-import com.enigma.orderin.dto.response.CashierResponse;
-import com.enigma.orderin.dto.response.CommonResponse;
-import com.enigma.orderin.dto.response.OrderResponse;
-import com.enigma.orderin.dto.response.ProductResponse;
+import com.enigma.orderin.dto.response.*;
 import com.enigma.orderin.entity.Cashier;
 import com.enigma.orderin.entity.Order;
 import com.enigma.orderin.entity.Product;
 import com.enigma.orderin.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,9 +35,9 @@ public class OrderController {
     @GetMapping(value = AppPath.ID_ORDER)
     public ResponseEntity<?> getById (@PathVariable(name = "id_order") Integer id){
         OrderResponse orderResponse = orderService.getOrderResponseById(id);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully get by id order")
                         .data(orderResponse)
                         .build());
@@ -48,11 +46,30 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<?> getAllOrder (){
         List<OrderResponse> orderResponse = orderService.getAllOrder();
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully get all order")
                         .data(orderResponse).build());
     }
 
+    @GetMapping(value = AppPath.PAGE)
+    public  ResponseEntity<?> getAllWithPagination(
+            @RequestParam(name = "page", required = false, defaultValue = "0") Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "5") Integer size
+    ){
+        Page<OrderResponse> productResponses = orderService.getAllWithPagination(page,size);
+        PagingResponse pagingResponse = PagingResponse.builder()
+                .currentPage(page)
+                .totalPage(productResponses.getTotalPages())
+                .size(size)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("Successfully get all product")
+                        .data(productResponses.getContent())
+                        .paging(pagingResponse)
+                        .build());
+    }
 }

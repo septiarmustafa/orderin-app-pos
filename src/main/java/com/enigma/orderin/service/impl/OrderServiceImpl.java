@@ -12,11 +12,20 @@ import com.enigma.orderin.repository.OrderRepository;
 import com.enigma.orderin.service.CashierService;
 import com.enigma.orderin.service.OrderService;
 import com.enigma.orderin.service.ProductDetailService;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -169,5 +178,47 @@ public class OrderServiceImpl implements OrderService {
                             .build();
 
                 }).collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<OrderResponse> getAllWithPagination(Integer page, Integer size) {
+        Specification<Order> specification = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<Order> orders = orderRepository.findAll(specification, pageable);
+
+        List<OrderResponse> orderResponses = orders.getContent().stream()
+                .flatMap(order -> order.getOrderDetail().stream()
+                        .map(orderDetail ->{
+                            CashierResponse cashierResponse = cashierService.getById(order.getCashier().getId());
+                                    List<OrderDetailResponse> orderDetailResponses = order.getOrderDetail()
+                                            .stream()
+                                            .map(orderDetails -> {
+                                                orderDetails.setOrder(order);
+                                                ProductDetail productDetail = orderDetails.getProductDetail();
+                                                return OrderDetailResponse.builder()
+                                                        .orderDetailId(orderDetails.getId())
+                                                        .quantity(orderDetails.getQuantity())
+                                                        .product(ProductResponse.builder()
+                                                                .productId(productDetail.getProduct().getId())
+                                                                .productName(productDetail.getProduct().getName())
+                                                                .stock(productDetail.getStock())
+                                                                .price(productDetail.getPrice())
+                                                                .isActive(productDetail.getIsActive())
+                                                                .build())
+                                                        .build();
+                                            }).toList();
+                            return OrderResponse.builder()
+                                    .orderId(order.getId())
+                                    .transactionDate(order.getDate())
+                                    .cashier(cashierResponse)
+                                    .listOrderDetail(orderDetailResponses)
+                                    .build();
+                            })).collect(Collectors.toList());
+
+        return new PageImpl<>(orderResponses, pageable, orders.getTotalElements());
     }
 }

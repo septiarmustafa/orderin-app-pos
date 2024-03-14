@@ -38,9 +38,9 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<?> getAllProduct (){
         List<Product> productResponse = productService.getAllProduct();
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully get all product")
                         .data(productResponse).build());
     }
@@ -48,9 +48,9 @@ public class ProductController {
     @GetMapping(value = AppPath.ID_PRODUCT)
     public ResponseEntity<?> getById (@PathVariable(name = "id_product") Integer id){
         ProductResponse productResponse = productService.getByIdProduct(id);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully get by id product")
                         .data(productResponse).build());
     }
@@ -59,9 +59,9 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateProduct (@RequestBody ProductRequest productRequest){
         ProductResponse productResponse = productService.updateProduct(productRequest);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully update product")
                         .data(productResponse).build());
     }
@@ -70,9 +70,9 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct (@PathVariable(name = "id_product") Integer id){
        productService.deleteProduct(id);
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully delete product")
                         .build());
     }
@@ -90,9 +90,9 @@ public class ProductController {
                 .totalPage(productResponses.getTotalPages())
                 .size(size)
                 .build();
-        return ResponseEntity.status(HttpStatus.CREATED)
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
-                        .statusCode(HttpStatus.CREATED.value())
+                        .statusCode(HttpStatus.OK.value())
                         .message("Successfully get all product")
                         .data(productResponses.getContent())
                         .paging(pagingResponse)

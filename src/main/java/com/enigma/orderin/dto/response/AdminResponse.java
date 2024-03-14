@@ -15,5 +15,4 @@ public class AdminResponse {
     private Integer id;
     private String name;
     private String phoneNumber;
-    private String userCredentialId;
 }
